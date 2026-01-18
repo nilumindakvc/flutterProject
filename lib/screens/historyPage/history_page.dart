@@ -8,41 +8,21 @@ import 'package:vpn/widgets/bin_widget.dart';
 import 'sub_widgets/statistics_summary_widget.dart';
 
 class HistoryPage extends StatefulWidget {
-  const HistoryPage({super.key});
+  const HistoryPage({
+    super.key,
+    required this.connectionHistory,
+    required this.historyClere,
+  });
 
+  final List<ConnectionHistory> connectionHistory;
+  final VoidCallback historyClere;
   @override
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  final List<ConnectionHistory> _connectionHistory = [
-    ConnectionHistory(
-      country: 'United States',
-      city: 'New York',
-      flag: '🇺🇸',
-      protocol: 'WireGuard',
-      connectedAt: DateTime.now().subtract(Duration(hours: 2)),
-      disconnectedAt: DateTime.now().subtract(Duration(hours: 1, minutes: 30)),
-      duration: '30 min',
-      dataUsed: '500 MB',
-      status: 'completed',
-    ),
-    ConnectionHistory(
-      country: 'United Kingdom',
-      city: 'London',
-      flag: '🇬🇧',
-      protocol: 'OpenVPN',
-      connectedAt: DateTime.now().subtract(Duration(hours: 5)),
-      disconnectedAt: DateTime.now().subtract(Duration(hours: 3, minutes: 15)),
-      duration: '1h 45m',
-      dataUsed: '1.2 GB',
-      status: 'completed',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    const luminousGreen = Color(0xFF00FF88);
     const darkBackground = Color(0xFF000000);
 
     return Scaffold(
@@ -76,7 +56,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     ),
                     BinWidget(
                       callback: () {
-                        _showClearHistoryDialog();
+                        _showClearHistoryDialog(widget.historyClere);
                       },
                     ),
                   ],
@@ -84,7 +64,9 @@ class _HistoryPageState extends State<HistoryPage> {
               ),
 
               // Statistics Summary
-              StatisticsSummaryWidget(connectionHistory: _connectionHistory),
+              StatisticsSummaryWidget(
+                connectionHistory: widget.connectionHistory,
+              ),
 
               SizedBox(height: 24),
 
@@ -92,9 +74,9 @@ class _HistoryPageState extends State<HistoryPage> {
               Expanded(
                 child: ListView.builder(
                   padding: EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: _connectionHistory.length,
+                  itemCount: widget.connectionHistory.length,
                   itemBuilder: (context, index) {
-                    final session = _connectionHistory[index];
+                    final session = widget.connectionHistory[index];
                     return Padding(
                       padding: EdgeInsets.only(bottom: 12),
                       child: Container(
@@ -118,7 +100,7 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  void _showClearHistoryDialog() {
+  void _showClearHistoryDialog(VoidCallback clearer) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -140,8 +122,9 @@ class _HistoryPageState extends State<HistoryPage> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _connectionHistory.clear();
+                  widget.historyClere();
                 });
+
                 Navigator.pop(context);
               },
               child: Text('Clear', style: TextStyle(color: Color(0xFFFF4444))),

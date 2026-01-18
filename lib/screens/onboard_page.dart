@@ -7,7 +7,9 @@ import 'package:vpn/widgets/light_emiting_button_widget.dart';
 import 'package:vpn/widgets/onetime_pulse_widget.dart';
 
 class OnboardPage extends StatefulWidget {
-  const OnboardPage({super.key});
+  const OnboardPage({super.key, required this.toggleTheme});
+
+  final VoidCallback toggleTheme;
 
   @override
   State<OnboardPage> createState() => _OnboardPageState();
@@ -131,7 +133,9 @@ class _OnboardPageState extends State<OnboardPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) {
-                                  return RegisteringPage();
+                                  return RegisteringPage(
+                                    toggleTheme: widget.toggleTheme,
+                                  );
                                 },
                               ),
                             );

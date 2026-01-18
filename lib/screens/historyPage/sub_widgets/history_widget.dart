@@ -108,13 +108,13 @@ class HistoryWidget extends StatelessWidget {
                   Icons.timer_outlined,
                 ),
               ),
-              Expanded(
-                child: _buildDetailItem(
-                  'Data Used',
-                  object.dataUsed,
-                  Icons.data_usage_outlined,
-                ),
-              ),
+              // Expanded(
+              //   child: _buildDetailItem(
+              //     'Data Used',
+              //     object.dataUsed,
+              //     Icons.data_usage_outlined,
+              //   ),
+              // ),
             ],
           ),
         ],

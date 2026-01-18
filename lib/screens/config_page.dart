@@ -16,7 +16,6 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
 
   @override
   Widget build(BuildContext context) {
-    const luminousGreen = Color(0xFF00FF88);
     const darkBackground = Color(0xFF000000);
 
     return Scaffold(
@@ -105,6 +104,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                       title: 'OpenVPN',
                       subtitle: 'Traditional, reliable, and widely supported',
                       icon: Icons.vpn_lock,
+                      isEnabled: false,
                       value: 'OpenVPN',
                       isSelected: _selectedProtocol == 'OpenVPN',
                       onTap: () {
@@ -138,6 +138,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                       title: 'Kill Switch',
                       subtitle: 'Block internet if VPN disconnects',
                       icon: Icons.block,
+                      isEnabled: false,
                       value: _killSwitch,
                       onChanged: (value) {
                         setState(() {
@@ -197,17 +198,6 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                     SizedBox(height: 12),
 
                     _buildActionOption(
-                      title: 'Import Configuration',
-                      subtitle: 'Load settings from file',
-                      icon: Icons.file_upload,
-                      onTap: () {
-                        // Import functionality
-                      },
-                    ),
-
-                    SizedBox(height: 12),
-
-                    _buildActionOption(
                       title: 'Reset to Defaults',
                       subtitle: 'Restore original settings',
                       icon: Icons.restore,
@@ -252,17 +242,24 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     required String value,
     required bool isSelected,
     required VoidCallback onTap,
+    bool isEnabled = true,
   }) {
     const luminousGreen = Color(0xFF00FF88);
 
     return Container(
       decoration: BoxDecoration(
-        color: isSelected
+        color: !isEnabled
+            ? Colors.white.withOpacity(0.02)
+            : isSelected
             ? luminousGreen.withOpacity(0.1)
             : Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? luminousGreen : Colors.white.withOpacity(0.1),
+          color: !isEnabled
+              ? Colors.white.withOpacity(0.05)
+              : isSelected
+              ? luminousGreen
+              : Colors.white.withOpacity(0.1),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -270,7 +267,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
+          onTap: isEnabled ? onTap : null,
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Row(
@@ -280,13 +277,17 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                   height: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isSelected
+                    color: !isEnabled
+                        ? Colors.white.withOpacity(0.05)
+                        : isSelected
                         ? luminousGreen.withOpacity(0.2)
                         : Colors.white.withOpacity(0.1),
                   ),
                   child: Icon(
                     icon,
-                    color: isSelected
+                    color: !isEnabled
+                        ? Colors.white.withOpacity(0.3)
+                        : isSelected
                         ? luminousGreen
                         : Colors.white.withOpacity(0.8),
                     size: 24,
@@ -300,7 +301,9 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                       Text(
                         title,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: !isEnabled
+                              ? Colors.white.withOpacity(0.3)
+                              : Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -309,7 +312,9 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: !isEnabled
+                              ? Colors.white.withOpacity(0.2)
+                              : Colors.white.withOpacity(0.7),
                           fontSize: 14,
                         ),
                       ),
@@ -322,14 +327,20 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected
+                      color: !isEnabled
+                          ? Colors.white.withOpacity(0.1)
+                          : isSelected
                           ? luminousGreen
                           : Colors.white.withOpacity(0.3),
                       width: 2,
                     ),
-                    color: isSelected ? luminousGreen : Colors.transparent,
+                    color: !isEnabled
+                        ? Colors.transparent
+                        : isSelected
+                        ? luminousGreen
+                        : Colors.transparent,
                   ),
-                  child: isSelected
+                  child: isSelected && isEnabled
                       ? Icon(Icons.check, color: Colors.black, size: 16)
                       : null,
                 ),
@@ -347,20 +358,33 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     required IconData icon,
     required bool value,
     required ValueChanged<bool> onChanged,
+    bool isEnabled = true,
   }) {
     const luminousGreen = Color(0xFF00FF88);
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: !isEnabled
+            ? Colors.white.withOpacity(0.02)
+            : Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(
+          color: !isEnabled
+              ? Colors.white.withOpacity(0.05)
+              : Colors.white.withOpacity(0.1),
+        ),
       ),
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(icon, color: luminousGreen, size: 24),
+            Icon(
+              icon,
+              color: !isEnabled
+                  ? luminousGreen.withOpacity(0.3)
+                  : luminousGreen,
+              size: 24,
+            ),
             SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -369,7 +393,9 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                   Text(
                     title,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: !isEnabled
+                          ? Colors.white.withOpacity(0.3)
+                          : Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -378,7 +404,9 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: !isEnabled
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.white.withOpacity(0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -387,11 +415,15 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
             ),
             Switch(
               value: value,
-              onChanged: onChanged,
+              onChanged: isEnabled ? onChanged : null,
               activeThumbColor: luminousGreen,
               activeTrackColor: luminousGreen.withOpacity(0.3),
-              inactiveThumbColor: Colors.white.withOpacity(0.8),
-              inactiveTrackColor: Colors.white.withOpacity(0.2),
+              inactiveThumbColor: !isEnabled
+                  ? Colors.white.withOpacity(0.3)
+                  : Colors.white.withOpacity(0.8),
+              inactiveTrackColor: !isEnabled
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.white.withOpacity(0.2),
             ),
           ],
         ),

@@ -14,6 +14,8 @@ class CircularActionButtonWidget extends StatelessWidget {
   final VoidCallback onPressed;
   final Color color;
 
+  void changeIcon() {}
+
   @override
   Widget build(BuildContext context) {
     return Column(

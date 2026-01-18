@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:vpn/models/connection_history.dart';
 import 'package:vpn/models/network_config.dart';
 import 'package:vpn/screens/config_page.dart';
 import 'package:vpn/screens/country_page.dart';
@@ -8,7 +10,9 @@ import 'package:vpn/widgets/circular_action_button_widget.dart';
 import 'package:wireguard_flutter/wireguard_flutter.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.toggleTheme});
+
+  final VoidCallback? toggleTheme;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -20,6 +24,111 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _rotateController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _rotateAnimation;
+  String country = "Germany";
+  String city = "Berlin";
+  String flag = '🇩🇪';
+
+  DateTime connectionStart = DateTime.now();
+  DateTime connectionEnd = DateTime.now();
+  Timer? _connectionTimer;
+  Duration _elapsedTime = Duration.zero;
+
+  final List<ConnectionHistory> _connectionHistory = [
+    ConnectionHistory(
+      country: 'United States',
+      city: 'New York',
+      flag: '🇺🇸',
+      protocol: 'WireGuard',
+      connectedAt: DateTime.now().subtract(Duration(hours: 2)),
+      disconnectedAt: DateTime.now().subtract(Duration(hours: 1, minutes: 30)),
+      duration: '30 min',
+      status: 'completed',
+    ),
+    ConnectionHistory(
+      country: 'United Kingdom',
+      city: 'London',
+      flag: '🇬🇧',
+      protocol: 'OpenVPN',
+      connectedAt: DateTime.now().subtract(Duration(hours: 5)),
+      disconnectedAt: DateTime.now().subtract(Duration(hours: 3, minutes: 15)),
+      duration: '1h 45m',
+      status: 'completed',
+    ),
+  ];
+
+  void setCountry(String newCountry) {
+    setState(() {
+      country = newCountry;
+    });
+  }
+
+  void setCity(String newCity) {
+    setState(() {
+      city = newCity;
+    });
+  }
+
+  void setFlag(String newFlag) {
+    setState(() {
+      flag = newFlag;
+    });
+  }
+
+  void historyInserter() {
+    Duration connectionDuration = connectionEnd.difference(connectionStart);
+    String formattedDuration = _formatConnectionDuration(connectionDuration);
+
+    var historyElement = ConnectionHistory(
+      country: country,
+      city: city,
+      flag: flag,
+      protocol: 'WireGuard',
+      connectedAt: connectionStart,
+      disconnectedAt: connectionEnd,
+      duration: formattedDuration,
+      status: 'completed',
+    );
+    _connectionHistory.add(historyElement);
+  }
+
+  void historyClearer() {
+    setState(() {
+      _connectionHistory.clear();
+    });
+  }
+
+  String _formatConnectionDuration(Duration duration) {
+    if (duration.inHours > 0) {
+      return '${duration.inHours}h ${duration.inMinutes.remainder(60)}m';
+    } else if (duration.inMinutes > 0) {
+      return '${duration.inMinutes}m';
+    } else {
+      return '${duration.inSeconds}s';
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String hours = twoDigits(duration.inHours);
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$hours:$minutes:$seconds";
+  }
+
+  void _startConnectionTimer() {
+    _connectionTimer?.cancel();
+    _connectionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _elapsedTime = DateTime.now().difference(connectionStart);
+      });
+    });
+  }
+
+  void _stopConnectionTimer() {
+    _connectionTimer?.cancel();
+    _connectionTimer = null;
+    connectionEnd = DateTime.now();
+  }
 
   final NetworkService netService = NetworkService(
     configObj: NetworkConfig(
@@ -62,23 +171,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     _pulseController.dispose();
     _rotateController.dispose();
+    _connectionTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     const luminousGreen = Color.fromARGB(255, 0, 255, 60);
-    const darkBackground = Color(0xFF000000);
     const redColor = Color.fromARGB(255, 255, 0, 0);
 
+    // Use theme colors instead of hardcoded ones
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: darkBackground,
+      backgroundColor: backgroundColor,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF000000), Color(0xFF0A0A0A), Color(0xFF111111)],
+            colors: isDark
+                ? [Color(0xFF000000), Color(0xFF0A0A0A), Color(0xFF111111)]
+                : [Color(0xFFF5F5F5), Color(0xFFE0E0E0), Color(0xFFD0D0D0)],
           ),
         ),
         child: SafeArea(
@@ -109,7 +224,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               onTap: () => Navigator.pop(context),
                               child: Icon(
                                 Icons.arrow_back_ios_new,
-                                color: Colors.white,
+                                color: isDark ? Colors.white : Colors.black,
                                 size: 18,
                               ),
                             ),
@@ -119,7 +234,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         Text(
                           'SecureLink',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : Colors.black,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -139,10 +254,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             ),
                           ),
                           child: IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              widget.toggleTheme!();
+                            },
                             icon: Icon(
                               Icons.dark_mode,
-                              color: Colors.white,
+                              color: isDark ? Colors.white : Colors.black,
                               size: 20,
                             ),
                           ),
@@ -158,12 +275,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               color: Colors.white.withOpacity(0.2),
                             ),
                           ),
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.settings,
-                              color: Colors.white,
-                              size: 20,
+
+                          // child:IconButton(
+                          //   onPressed: () {},
+                          //   icon: Icon(
+                          //     Icons.settings,
+                          //     color: Colors.white,
+                          //     size: 20,
+                          //   ),
+                          // ),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.1),
+                            ),
+                            child: Center(
+                              child: Text(flag, style: TextStyle(fontSize: 20)),
                             ),
                           ),
                         ),
@@ -192,6 +321,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
 
                     SizedBox(height: 20),
+
+                    // Connection Timer Display (only when VPN is enabled)
+                    if (_isVpnEnabled) ...[
+                      Text(
+                        'Connected for',
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.6)
+                              : Colors.black.withOpacity(0.6),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        _formatDuration(_elapsedTime),
+                        style: TextStyle(
+                          color: luminousGreen,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
 
                     // Animated VPN Status Icon
                     Stack(
@@ -302,7 +456,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           ? 'Your connection is secure and private'
                           : 'Tap to enable secure connection',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: isDark
+                            ? Colors.white.withOpacity(0.8)
+                            : Colors.black.withOpacity(0.8),
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
                       ),
@@ -325,7 +481,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) {
-                                    return const CountryPage();
+                                    return CountryPage(
+                                      setCurrentCountry: setCountry,
+                                      setCurrentCity: setCity,
+                                      setCurrentFlag: setFlag,
+                                    );
                                   },
                                 ),
                               );
@@ -355,7 +515,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) {
-                                    return const HistoryPage();
+                                    return HistoryPage(
+                                      connectionHistory: _connectionHistory,
+                                      historyClere: historyClearer,
+                                    );
                                   },
                                 ),
                               );
@@ -381,16 +544,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (_isVpnEnabled == false) {
       await netService.startServer();
 
+      // Set connection start time BEFORE starting timer
+      connectionStart = DateTime.now();
+      _elapsedTime = Duration.zero;
+      _startConnectionTimer();
+
       setState(() {
         _isVpnEnabled = true;
       });
 
-      _isVpnEnabled = true;
       netService.getVpnStages().listen((event) {
         print(event);
       });
     } else {
       await netService.stopServer();
+
+      // Stop timer and save history
+      _stopConnectionTimer();
+      historyInserter();
 
       setState(() {
         _isVpnEnabled = false;

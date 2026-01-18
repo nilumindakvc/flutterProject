@@ -7,7 +7,9 @@ import 'package:vpn/widgets/input_field_widget.dart';
 import 'package:vpn/widgets/light_emiting_button_widget.dart';
 
 class RegisteringPage extends StatefulWidget {
-  const RegisteringPage({super.key});
+  const RegisteringPage({super.key, required this.toggleTheme});
+
+  final VoidCallback toggleTheme;
 
   @override
   State<RegisteringPage> createState() => _RegisteringPageState();
@@ -268,7 +270,9 @@ class _RegisteringPageState extends State<RegisteringPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) {
-                                  return HomePage();
+                                  return HomePage(
+                                    toggleTheme: widget.toggleTheme,
+                                  );
                                 },
                               ),
                             );

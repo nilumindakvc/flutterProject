@@ -6,7 +6,9 @@ import 'package:vpn/widgets/repeat_pulse_widget.dart';
 import 'package:vpn/widgets/sized_boxed_infinity_button_widget.dart';
 
 class WelcomePage extends StatefulWidget {
-  const WelcomePage({super.key});
+  const WelcomePage({super.key, required this.toggleTheme});
+
+  final VoidCallback toggleTheme;
 
   @override
   State<WelcomePage> createState() => _WelcomePageState();
@@ -114,7 +116,9 @@ class _WelcomePageState extends State<WelcomePage>
                             context,
                             MaterialPageRoute(
                               builder: (context) {
-                                return const OnboardPage();
+                                return OnboardPage(
+                                  toggleTheme: widget.toggleTheme,
+                                );
                               },
                             ),
                           );
@@ -134,7 +138,9 @@ class _WelcomePageState extends State<WelcomePage>
                             context,
                             MaterialPageRoute(
                               builder: (context) {
-                                return const LoginPage();
+                                return LoginPage(
+                                  toggleTheme: widget.toggleTheme,
+                                );
                               },
                             ),
                           );

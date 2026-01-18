@@ -194,7 +194,6 @@ class _CountryListViewerWidgetState extends State<CountryListViewerWidget> {
         ),
       ),
     );
-    ;
   }
 
   Color _getLoadColor(String load) {

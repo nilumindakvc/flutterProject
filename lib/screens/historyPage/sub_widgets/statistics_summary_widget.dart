@@ -33,13 +33,13 @@ class StatisticsSummaryWidget extends StatelessWidget {
               height: 40,
               color: Colors.white.withOpacity(0.2),
             ),
-            Expanded(
-              child: StatisticsItemWidget(
-                label: 'Data Used',
-                value: _calculateTotalData(),
-                icon: Icons.data_usage,
-              ),
-            ),
+            // Expanded(
+            //   child: StatisticsItemWidget(
+            //     label: 'Data Used',
+            //     value: _calculateTotalData(),
+            //     icon: Icons.data_usage,
+            //   ),
+            // ),
             Container(
               width: 1,
               height: 40,
@@ -58,25 +58,29 @@ class StatisticsSummaryWidget extends StatelessWidget {
     );
   }
 
-  String _calculateTotalData() {
-    double totalMB = 0;
-    for (var session in connectionHistory) {
-      String dataStr = session.dataUsed;
-      if (dataStr.contains('GB')) {
-        totalMB += double.parse(dataStr.replaceAll(' GB', '')) * 1024;
-      } else {
-        totalMB += double.parse(dataStr.replaceAll(' MB', ''));
-      }
-    }
+  // String _calculateTotalData() {
+  //   double totalMB = 0;
+  //   for (var session in connectionHistory) {
+  //     String dataStr = session.dataUsed;
+  //     if (dataStr.contains('GB')) {
+  //       totalMB += double.parse(dataStr.replaceAll(' GB', '')) * 1024;
+  //     } else {
+  //       totalMB += double.parse(dataStr.replaceAll(' MB', ''));
+  //     }
+  //   }
 
-    if (totalMB > 1024) {
-      return '${(totalMB / 1024).toStringAsFixed(1)} GB';
-    } else {
-      return '${totalMB.toInt()} MB';
-    }
-  }
+  //   if (totalMB > 1024) {
+  //     return '${(totalMB / 1024).toStringAsFixed(1)} GB';
+  //   } else {
+  //     return '${totalMB.toInt()} MB';
+  //   }
+  // }
 
   String _calculateSuccessRate() {
+    if (connectionHistory.isEmpty) {
+      return '0%';
+    }
+
     int successful = connectionHistory
         .where((s) => s.status == 'completed')
         .length;

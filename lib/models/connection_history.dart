@@ -6,7 +6,7 @@ class ConnectionHistory {
   final DateTime connectedAt;
   final DateTime disconnectedAt;
   final String duration;
-  final String dataUsed;
+  // final String dataUsed;
   final String status;
 
   ConnectionHistory({
@@ -17,7 +17,7 @@ class ConnectionHistory {
     required this.connectedAt,
     required this.disconnectedAt,
     required this.duration,
-    required this.dataUsed,
+    // required this.dataUsed,
     required this.status,
   });
 }

@@ -7,7 +7,16 @@ import 'package:vpn/widgets/search_bar_widget.dart';
 import 'package:vpn/models/country.dart';
 
 class CountryPage extends StatefulWidget {
-  const CountryPage({super.key});
+  const CountryPage({
+    super.key,
+    required this.setCurrentCountry,
+    required this.setCurrentCity,
+    required this.setCurrentFlag,
+  });
+
+  final void Function(String) setCurrentCountry;
+  final void Function(String) setCurrentCity;
+  final void Function(String) setCurrentFlag;
 
   @override
   State<CountryPage> createState() => _CountryPageState();
@@ -45,7 +54,6 @@ class _CountryPageState extends State<CountryPage> {
 
   @override
   Widget build(BuildContext context) {
-    const luminousGreen = Color(0xFF00FF88);
     const darkBackground = Color(0xFF000000);
 
     return Scaffold(
@@ -96,6 +104,9 @@ class _CountryPageState extends State<CountryPage> {
                       callback: () {
                         setState(() {
                           _selectedCountry = country.name;
+                          widget.setCurrentCountry(country.name);
+                          widget.setCurrentCity(country.city);
+                          widget.setCurrentFlag(country.flag);
                         });
                       },
                     );
