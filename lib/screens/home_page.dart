@@ -3,6 +3,7 @@ import 'package:vpn/models/network_config.dart';
 import 'package:vpn/screens/config_page.dart';
 import 'package:vpn/screens/country_page.dart';
 import 'package:vpn/screens/historyPage/history_page.dart';
+import 'package:vpn/services/authentication_service.dart';
 import 'package:vpn/services/network_service.dart';
 import 'package:vpn/widgets/circular_action_button_widget.dart';
 import 'package:wireguard_flutter/wireguard_flutter.dart';
@@ -20,6 +21,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _rotateController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _rotateAnimation;
+  final AuthenticationService _authService = AuthenticationService();
 
   final NetworkService netService = NetworkService(
     configObj: NetworkConfig(
@@ -163,6 +165,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             icon: Icon(
                               Icons.settings,
                               color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.red.withOpacity(0.3),
+                            ),
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              _showLogoutDialog(context);
+                            },
+                            icon: Icon(
+                              Icons.logout,
+                              color: Colors.red,
                               size: 20,
                             ),
                           ),
@@ -396,5 +420,88 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _isVpnEnabled = false;
       });
     }
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF1A1A1A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.red.withOpacity(0.3), width: 1),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.red, size: 24),
+              SizedBox(width: 12),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close dialog first
+                
+                // Disconnect VPN if enabled
+                if (_isVpnEnabled) {
+                  await netService.stopServer();
+                }
+
+                // Sign out from Firebase
+                await _authService.signOut();
+
+                // Navigate back to welcome screen
+                if (mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/',
+                    (route) => false,
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(
+                'Logout',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
