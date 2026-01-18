@@ -247,27 +247,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                     Row(
                       children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                            ),
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              widget.toggleTheme!();
-                            },
-                            icon: Icon(
-                              Icons.dark_mode,
-                              color: isDark ? Colors.white : Colors.black,
-                              size: 20,
-                            ),
-                          ),
-                        ),
+                        // Container(
+                        //   width: 40,
+                        //   height: 40,
+                        //   decoration: BoxDecoration(
+                        //     color: Colors.white.withOpacity(0.1),
+                        //     borderRadius: BorderRadius.circular(20),
+                        //     border: Border.all(
+                        //       color: Colors.white.withOpacity(0.2),
+                        //     ),
+                        //   ),
+                        //   child: IconButton(
+                        //     onPressed: () {
+                        //       // widget.toggleTheme!();
+                        //     },
+                        //     icon: Icon(
+                        //       Icons.dark_mode,
+                        //       color: isDark ? Colors.white : Colors.black,
+                        //       size: 20,
+                        //     ),
+                        //   ),
+                        // ),
                         SizedBox(width: 12),
                         Container(
                           width: 40,
