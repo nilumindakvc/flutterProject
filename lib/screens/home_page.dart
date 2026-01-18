@@ -5,6 +5,7 @@ import 'package:vpn/models/network_config.dart';
 import 'package:vpn/screens/config_page.dart';
 import 'package:vpn/screens/country_page.dart';
 import 'package:vpn/screens/historyPage/history_page.dart';
+import 'package:vpn/services/authentication_service.dart';
 import 'package:vpn/services/network_service.dart';
 import 'package:vpn/widgets/circular_action_button_widget.dart';
 import 'package:wireguard_flutter/wireguard_flutter.dart';
@@ -24,6 +25,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _rotateController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _rotateAnimation;
+
   String country = "Germany";
   String city = "Berlin";
   String flag = '🇩🇪';
@@ -32,6 +34,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   DateTime connectionEnd = DateTime.now();
   Timer? _connectionTimer;
   Duration _elapsedTime = Duration.zero;
+
+  final AuthenticationService _authService = AuthenticationService();
 
   final List<ConnectionHistory> _connectionHistory = [
     ConnectionHistory(
@@ -55,6 +59,51 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       status: 'completed',
     ),
   ];
+
+  final NetworkService netService = NetworkService(
+    configObj: NetworkConfig(
+      privateKey: "CEnPPC46zeivARsfOhL1NaiIzeh/oB3fUdC+YyrhkH4=",
+      address: "10.66.66.2/32, fd42:42:42::2/128",
+      dns: "1.1.1.1, 1.0.0.1",
+      publicKey: "/ptJU0VjaZL7mouPky+0KozxHa2peS3wDxYcXNALZDU=",
+      preShearedKey: "Hn8rm2jDrVTDYZEcSs+VM9e2O2l1o2AEYRSyfvvECoI=",
+      allowedIps: "0.0.0.0/0, ::/0",
+      persistentKeepalive: "0",
+      endpoint: "140.245.114.17:57359",
+    ),
+    wireguard: WireGuardFlutter.instance,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _rotateController = AnimationController(
+      duration: Duration(seconds: 10),
+      vsync: this,
+    )..repeat();
+
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _rotateAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _rotateController, curve: Curves.linear));
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _rotateController.dispose();
+    _connectionTimer?.cancel();
+    super.dispose();
+  }
 
   void setCountry(String newCountry) {
     setState(() {
@@ -128,51 +177,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _connectionTimer?.cancel();
     _connectionTimer = null;
     connectionEnd = DateTime.now();
-  }
-
-  final NetworkService netService = NetworkService(
-    configObj: NetworkConfig(
-      privateKey: "CEnPPC46zeivARsfOhL1NaiIzeh/oB3fUdC+YyrhkH4=",
-      address: "10.66.66.2/32, fd42:42:42::2/128",
-      dns: "1.1.1.1, 1.0.0.1",
-      publicKey: "/ptJU0VjaZL7mouPky+0KozxHa2peS3wDxYcXNALZDU=",
-      preShearedKey: "Hn8rm2jDrVTDYZEcSs+VM9e2O2l1o2AEYRSyfvvECoI=",
-      allowedIps: "0.0.0.0/0, ::/0",
-      persistentKeepalive: "0",
-      endpoint: "140.245.114.17:57359",
-    ),
-    wireguard: WireGuardFlutter.instance,
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      duration: Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _rotateController = AnimationController(
-      duration: Duration(seconds: 10),
-      vsync: this,
-    )..repeat();
-
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    _rotateAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _rotateController, curve: Curves.linear));
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    _rotateController.dispose();
-    _connectionTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -293,6 +297,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             ),
                             child: Center(
                               child: Text(flag, style: TextStyle(fontSize: 20)),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.red.withOpacity(0.3),
+                            ),
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              _showLogoutDialog(context);
+                            },
+                            icon: Icon(
+                              Icons.logout,
+                              color: Colors.red,
+                              size: 20,
                             ),
                           ),
                         ),
@@ -567,5 +593,87 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _isVpnEnabled = false;
       });
     }
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF1A1A1A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.red.withOpacity(0.3), width: 1),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.red, size: 24),
+              SizedBox(width: 12),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close dialog first
+
+                // Disconnect VPN if enabled
+                if (_isVpnEnabled) {
+                  await netService.stopServer();
+                }
+
+                // Sign out from Firebase
+                await _authService.signOut();
+
+                // Navigate back to welcome screen
+                if (mounted) {
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/', (route) => false);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(
+                'Logout',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

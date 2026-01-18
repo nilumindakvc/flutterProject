@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vpn/screens/home_page.dart';
+import 'package:vpn/services/authentication_service.dart';
 import 'package:vpn/theme/app_colors.dart';
 import 'package:vpn/widgets/back_arrow_widget.dart';
 import 'package:vpn/widgets/circular_image_widget.dart';
@@ -19,8 +20,10 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final AuthenticationService _authService = AuthenticationService();
   bool _obscurePassword = true;
   bool _rememberMe = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -169,9 +172,7 @@ class _LoginPageState extends State<LoginPage> {
                               ],
                             ),
                             TextButton(
-                              onPressed: () {
-                                // Forgot password functionality can be added here
-                              },
+                              onPressed: _handleForgotPassword,
                               child: Text(
                                 'Forgot Password?',
                                 style: TextStyle(
@@ -187,25 +188,20 @@ class _LoginPageState extends State<LoginPage> {
                         SizedBox(height: 40),
 
                         // Login Button
-                        LightEmittingButtonWidget(
-                          gradient: [
-                            AppColors.luminousGreen,
-                            Color(0xFF00CC6A),
-                          ],
-                          callback: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) {
-                                  return HomePage(
-                                    toggleTheme: widget.toggleTheme,
-                                  );
-                                },
+                        _isLoading
+                            ? Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.luminousGreen,
+                                ),
+                              )
+                            : LightEmittingButtonWidget(
+                                gradient: [
+                                  AppColors.luminousGreen,
+                                  Color(0xFF00CC6A),
+                                ],
+                                callback: _handleLogin,
+                                text: 'Sign In',
                               ),
-                            );
-                          },
-                          text: 'Sign In',
-                        ),
 
                         SizedBox(height: 32),
 
@@ -313,5 +309,78 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final result = await _authService.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result['success']) {
+        // Navigate to home page
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+            (route) => false,
+          );
+        }
+      } else {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please enter your email address'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final result = await _authService.resetPassword(_emailController.text);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: result['success'] ? Colors.green : Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
   }
 }
