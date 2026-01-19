@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:vpn/Data/data.dart';
+import 'package:vpn/models/network_config.dart';
+import 'package:vpn/services/network_service.dart';
 import 'package:vpn/theme/app_colors.dart';
 import 'package:vpn/theme/app_text_styles.dart';
 import 'package:vpn/widgets/back_arrow_widget.dart';
@@ -12,11 +15,13 @@ class CountryPage extends StatefulWidget {
     required this.setCurrentCountry,
     required this.setCurrentCity,
     required this.setCurrentFlag,
+    required this.setCurrentServer,
   });
 
   final void Function(String) setCurrentCountry;
   final void Function(String) setCurrentCity;
   final void Function(String) setCurrentFlag;
+  final void Function(NetworkConfig) setCurrentServer;
 
   @override
   State<CountryPage> createState() => _CountryPageState();
@@ -27,26 +32,18 @@ class _CountryPageState extends State<CountryPage> {
 
   final List<Country> _countries = [
     Country(
-      name: 'United States',
-      city: 'New York',
-      flag: '🇺🇸',
-      ping: '12ms',
+      name: 'Singapore',
+      city: 'Singapore',
+      flag: '🇸🇬',
+      ping: '8ms',
       low: 'Low',
       premium: false,
     ),
     Country(
-      name: 'United Kingdom',
-      city: 'London',
-      flag: '🇬🇧',
-      ping: '23ms',
-      low: 'Medium',
-      premium: false,
-    ),
-    Country(
-      name: 'Germany',
-      city: 'Berlin',
-      flag: '🇩🇪',
-      ping: '18ms',
+      name: 'Sweden',
+      city: 'Stockholm',
+      flag: '🇸🇪',
+      ping: '15ms',
       low: 'Low',
       premium: false,
     ),
@@ -107,6 +104,13 @@ class _CountryPageState extends State<CountryPage> {
                           widget.setCurrentCountry(country.name);
                           widget.setCurrentCity(country.city);
                           widget.setCurrentFlag(country.flag);
+
+                          // Set server configuration based on selected country
+                          if (country.name == 'Singapore') {
+                            widget.setCurrentServer(ServerData.severs[0]);
+                          } else if (country.name == 'Sweden') {
+                            widget.setCurrentServer(ServerData.severs[1]);
+                          }
                         });
                       },
                     );

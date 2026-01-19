@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:vpn/Data/data.dart';
 import 'package:vpn/models/connection_history.dart';
 import 'package:vpn/models/network_config.dart';
 import 'package:vpn/screens/config_page.dart';
@@ -26,9 +27,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late Animation<double> _pulseAnimation;
   late Animation<double> _rotateAnimation;
 
-  String country = "Germany";
-  String city = "Berlin";
-  String flag = '🇩🇪';
+  String country = "Singapore";
+  String city = "Singapore";
+  String flag = '🇸🇬';
+  NetworkConfig currentConfig = ServerData.severs[1];
 
   DateTime connectionStart = DateTime.now();
   DateTime connectionEnd = DateTime.now();
@@ -60,19 +62,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     ),
   ];
 
-  final NetworkService netService = NetworkService(
-    configObj: NetworkConfig(
-      privateKey: "CEnPPC46zeivARsfOhL1NaiIzeh/oB3fUdC+YyrhkH4=",
-      address: "10.66.66.2/32, fd42:42:42::2/128",
-      dns: "1.1.1.1, 1.0.0.1",
-      publicKey: "/ptJU0VjaZL7mouPky+0KozxHa2peS3wDxYcXNALZDU=",
-      preShearedKey: "Hn8rm2jDrVTDYZEcSs+VM9e2O2l1o2AEYRSyfvvECoI=",
-      allowedIps: "0.0.0.0/0, ::/0",
-      persistentKeepalive: "0",
-      endpoint: "140.245.114.17:57359",
-    ),
-    wireguard: WireGuardFlutter.instance,
-  );
+  // final NetworkService netService = NetworkService(
+  //   configObj: currentServer,
+  //   wireguard: WireGuardFlutter.instance,
+  // );
+
+  void setcurrentConfig(NetworkConfig newConfig) {
+    setState(() {
+      currentConfig = newConfig;
+    });
+  }
+
+  NetworkService getServer(NetworkConfig currentConfig) {
+    final NetworkService netService = NetworkService(
+      configObj: currentConfig,
+      wireguard: WireGuardFlutter.instance,
+    );
+    return netService;
+  }
 
   @override
   void initState() {
@@ -443,6 +450,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         // Center button
                         GestureDetector(
                           onTap: () {
+                            final NetworkService netService = getServer(
+                              currentConfig,
+                            );
                             enableOrDisableVpn(netService);
                           },
                           child: Container(
@@ -511,6 +521,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       setCurrentCountry: setCountry,
                                       setCurrentCity: setCity,
                                       setCurrentFlag: setFlag,
+                                      setCurrentServer: setcurrentConfig,
                                     );
                                   },
                                 ),
@@ -645,6 +656,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
                 // Disconnect VPN if enabled
                 if (_isVpnEnabled) {
+                  final NetworkService netService = getServer(currentConfig);
                   await netService.stopServer();
                 }
 
